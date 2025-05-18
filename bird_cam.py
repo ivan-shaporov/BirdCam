@@ -12,9 +12,9 @@ FRAME_HEIGHT = 480
 FPS = 20.0
 
 # Motion detection parameters
-PIXEL_DIFF_THRESHOLD = 50
-MOTION_THRESHOLD = 0.1  # fraction of changed pixels
-SHAKE_MOTION_THRESHOLD = 0.4  # ignore camera shake
+PIXEL_DIFF_THRESHOLD = 15
+MOTION_THRESHOLD = 0.02  # fraction of changed pixels
+SHAKE_MOTION_THRESHOLD = 0.09  # ignore camera shake
 NO_MOTION_TIMEOUT = 5  # seconds to wait before stopping recording
 
 FRAME_AREA = FRAME_WIDTH * FRAME_HEIGHT
@@ -48,12 +48,14 @@ def main():
 
         motion_area = sum(cv2.contourArea(c) for c in contours)
         affected_fraction = motion_area / FRAME_AREA
+        if affected_fraction > 0.01:
+            print(f"\rMotion area: {motion_area}, Affected fraction: {affected_fraction:.2f}     ", end='')
         motion_detected = MOTION_THRESHOLD < affected_fraction < SHAKE_MOTION_THRESHOLD
 
         if motion_detected:
             if not recording:
                 file_name = f"../video/bird_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{int(affected_fraction * 100)}.avi"
-                print(f"Motion detected — starting recording {file_name}.")
+                print(f"\nMotion detected — starting recording {file_name}.")
                 out = cv2.VideoWriter(file_name, cv2.VideoWriter_fourcc(*'XVID'), FPS, (FRAME_WIDTH, FRAME_HEIGHT))
                 recording = True
             last_motion_time = time.time()
